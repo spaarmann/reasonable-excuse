@@ -1,5 +1,6 @@
 FROM alpine:latest
 
-COPY reasonable_excuse /app/reasonable_excuse
+# To use, mount a valid config to `/app/config.kdl`
+COPY build/reasonable-excuse /app/reasonable-excuse
 WORKDIR /app/
-CMD [ "/app/reasonable_excuse" ]
+CMD [ "/app/reasonable-excuse" ]

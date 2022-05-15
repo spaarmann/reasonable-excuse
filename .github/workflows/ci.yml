@@ -1,0 +1,79 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    name: Debug Build & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Debug Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo test --verbose
+  release-build:
+    name: Release Build
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust toolchain and target
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          target: x86_64-unknown-linux-musl
+      - name: Install musl-tools
+        run: sudo apt-get install musl-tools
+      - name: Release Build
+        run: cargo build --release --target x86_64-unknown-linux-musl
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: release-build
+          path: target/x86_64-unknown-linux-musl/release/reasonable-excuse
+  docker:
+    name: Create Docker image
+    needs: release-build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download build artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: release-build
+          path: build
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extra metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - run: chmod +x 'build/reasonable-excuse'
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
