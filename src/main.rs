@@ -129,10 +129,20 @@ async fn upload_post(
 ) -> Result<String, StatusCode> {
     tracing::info!("Upload request");
 
-    let bytes = get_file_bytes(body).await?;
+    let (original_name, bytes) = get_file_name_and_bytes(body).await?;
+
+    // We want to preserve the original file extension, while replacing the rest of the file name
+    // with a random short name.
+    let extension = original_name
+        .rsplit_once('.')
+        .ok_or(StatusCode::BAD_REQUEST)?
+        .1;
 
     loop {
-        let name = generate_name(upload_config.filename_length);
+        let mut name = generate_name(upload_config.filename_length);
+        name.push('.');
+        name.push_str(&extension);
+
         let mut path = upload_config.target_dir.clone();
         path.push(&name);
 
@@ -165,19 +175,26 @@ async fn upload_post(
     }
 }
 
-async fn get_file_bytes(mut body: Multipart) -> Result<Bytes, StatusCode> {
+async fn get_file_name_and_bytes(mut body: Multipart) -> Result<(String, Bytes), StatusCode> {
     let field = body
         .next_field()
         .await
         .map_err(|_| StatusCode::BAD_REQUEST)?
         .ok_or(StatusCode::BAD_REQUEST)?;
 
-    let name = field.name();
-    if name != Some("file") {
+    let field_name = field.name();
+    if field_name != Some("file") {
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    field.bytes().await.map_err(|_| StatusCode::BAD_REQUEST)
+    let file_name = field
+        .file_name()
+        .ok_or(StatusCode::BAD_REQUEST)?
+        .to_string();
+    let bytes = field.bytes().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+
+    tracing::info!("Got file {} with {} bytes", file_name, bytes.len());
+    Ok((file_name, bytes))
 }
 
 fn generate_name(len: usize) -> String {
