@@ -4,6 +4,7 @@ use axum::Router;
 use miette::{IntoDiagnostic, Result, WrapErr};
 use tracing_subscriber::{prelude::*, EnvFilter};
 
+mod calendar;
 mod upload;
 
 #[derive(knuffel::Decode, Debug)]
@@ -12,6 +13,8 @@ struct Config {
     address: String,
     #[knuffel(child)]
     upload: upload::Config,
+    #[knuffel(child)]
+    calendar: calendar::Config,
 }
 
 fn read_config() -> Result<Config> {
@@ -40,6 +43,7 @@ async fn main() -> Result<()> {
 
     let app = Router::new();
     let app = upload::setup(config.upload, app).wrap_err("Failed to set up upload module")?;
+    let app = calendar::setup(config.calendar, app).wrap_err("Failed to set up calendar module")?;
 
     let addr = config
         .address

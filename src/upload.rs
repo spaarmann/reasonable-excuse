@@ -20,7 +20,7 @@ pub struct Config {
     filename_length: usize,
 }
 
-pub fn setup(config: Config, router: Router) -> miette::Result<Router> {
+pub fn setup(config: Config, app: Router) -> miette::Result<Router> {
     let config = Arc::new(config);
 
     let upload_target_meta = std::fs::metadata(&config.target_dir)
@@ -34,7 +34,7 @@ pub fn setup(config: Config, router: Router) -> miette::Result<Router> {
         ));
     }
 
-    Ok(router
+    Ok(app
         .route(&config.route, axum::routing::get(get))
         .route(&config.route, axum::routing::post(post))
         .layer(Extension(config)))
@@ -46,11 +46,11 @@ async fn get(ConnectInfo(client_addr): ConnectInfo<SocketAddr>) -> &'static str 
     "POST to this address to upload files"
 }
 
-#[tracing::instrument(skip(body, upload_config))]
+#[tracing::instrument(skip(body, config))]
 async fn post(
     body: Multipart,
     ConnectInfo(client_addr): ConnectInfo<SocketAddr>,
-    Extension(upload_config): Extension<Arc<Config>>,
+    Extension(config): Extension<Arc<Config>>,
 ) -> Result<String, StatusCode> {
     tracing::info!("Upload request");
 
@@ -64,11 +64,11 @@ async fn post(
         .1;
 
     loop {
-        let mut name = generate_name(upload_config.filename_length);
+        let mut name = generate_name(config.filename_length);
         name.push('.');
         name.push_str(&extension);
 
-        let mut path = upload_config.target_dir.clone();
+        let mut path = config.target_dir.clone();
         path.push(&name);
 
         let mut file = match OpenOptions::new()
