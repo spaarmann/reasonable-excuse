@@ -4,3 +4,9 @@ upload {
 	target-dir "./test-uploads/"
 	filename-length 4
 }
+calendar {
+	route "/calendar"
+	pass-param "id"
+	base-url "https://personligtskema.ku.dk/ical.asp?objectclass=student"
+	filter "5100-B1-1E22;"
+}
