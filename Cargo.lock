@@ -170,6 +170,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "error-chain"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9435d864e017c3c6afeac1654189b06cdb491cf2ff73dbf0d73b0f292f42ff8"
+dependencies = [
+ "backtrace",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -311,6 +320,15 @@ dependencies = [
  "tower-service",
  "tracing",
  "want",
+]
+
+[[package]]
+name = "ical"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a985f921bf84e6d00286f0f41363e2d39978370d8d8868c114002d863c27094f"
+dependencies = [
+ "error-chain",
 ]
 
 [[package]]
@@ -661,6 +679,7 @@ name = "reasonable-excuse"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "ical",
  "knuffel",
  "miette",
  "rand",

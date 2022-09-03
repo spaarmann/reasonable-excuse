@@ -13,3 +13,4 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 knuffel = "2.0"
 miette = { version = "4.7", features = ["fancy"] }
 rand = "0.8"
+ical = { version = "0.5", default-features = false, features = ["ical"] }
