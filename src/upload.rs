@@ -2,7 +2,7 @@ use std::{io::ErrorKind, net::SocketAddr, path::PathBuf, sync::Arc};
 
 use axum::{
     body::Bytes,
-    extract::{ConnectInfo, Multipart},
+    extract::{ConnectInfo, DefaultBodyLimit, Multipart},
     http::StatusCode,
     Extension, Router,
 };
@@ -37,6 +37,8 @@ pub fn setup(config: Config, app: Router) -> miette::Result<Router> {
     Ok(app
         .route(&config.route, axum::routing::get(get))
         .route(&config.route, axum::routing::post(post))
+        // This is only accessible internally anyway; I want to be able to upload large files.
+        .layer(DefaultBodyLimit::disable())
         .layer(Extension(config)))
 }
 
