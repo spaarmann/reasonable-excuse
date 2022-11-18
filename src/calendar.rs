@@ -6,6 +6,7 @@ use axum::{
     Extension, Router,
 };
 use miette::{Context, IntoDiagnostic};
+use regex::Regex;
 use reqwest::{Client, Url};
 
 #[derive(knuffel::Decode, Debug)]
@@ -28,9 +29,14 @@ pub fn setup(config: Config, app: Router) -> miette::Result<Router> {
         .into_diagnostic()
         .wrap_err("Failed to create reqwest Client")?;
 
+    let filter_regex = Regex::new(&config.filter)
+        .into_diagnostic()
+        .wrap_err("Failed to create filter regex")?;
+
     Ok(app
         .route(&config.route, axum::routing::get(get))
         .layer(Extension(config))
+        .layer(Extension(filter_regex))
         .layer(Extension(client)))
 }
 
@@ -39,6 +45,7 @@ async fn get(
     Query(params): Query<HashMap<String, String>>,
     ConnectInfo(client_addr): ConnectInfo<SocketAddr>,
     Extension(config): Extension<Arc<Config>>,
+    Extension(filter): Extension<Regex>,
     Extension(client): Extension<Client>,
 ) -> Result<String, StatusCode> {
     tracing::info!("Calendar request");
@@ -69,7 +76,7 @@ async fn get(
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    let response = response.replace(&config.filter, "");
+    let response = filter.replace_all(&response, "");
 
-    Ok(response)
+    Ok(response.to_string())
 }

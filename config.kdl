@@ -8,5 +8,5 @@ calendar {
 	route "/calendar"
 	pass-param "id"
 	base-url "https://personligtskema.ku.dk/ical.asp?objectclass=student"
-	filter "5100-B1-1E22;"
+	filter "5100-B[1-5]-\\dE2\\d;"
 }
