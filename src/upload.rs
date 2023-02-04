@@ -50,9 +50,9 @@ async fn get(ConnectInfo(client_addr): ConnectInfo<SocketAddr>) -> &'static str 
 
 #[tracing::instrument(skip(body, config))]
 async fn post(
-    body: Multipart,
     ConnectInfo(client_addr): ConnectInfo<SocketAddr>,
     Extension(config): Extension<Arc<Config>>,
+    body: Multipart,
 ) -> Result<String, StatusCode> {
     tracing::info!("Upload request");
 
