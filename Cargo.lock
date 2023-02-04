@@ -444,7 +444,7 @@ dependencies = [
  "base64 0.13.1",
  "chumsky",
  "knuffel-derive",
- "miette",
+ "miette 4.7.1",
  "thiserror",
  "unicode-width",
 ]
@@ -520,9 +520,21 @@ version = "4.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c90329e44f9208b55f45711f9558cec15d7ef8295cc65ecd6d4188ae8edc58c"
 dependencies = [
+ "miette-derive 4.7.1",
+ "once_cell",
+ "thiserror",
+ "unicode-width",
+]
+
+[[package]]
+name = "miette"
+version = "5.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4afd9b301defa984bbdbe112b4763e093ed191750a0d914a78c1106b2d0fe703"
+dependencies = [
  "atty",
  "backtrace",
- "miette-derive",
+ "miette-derive 5.5.0",
  "once_cell",
  "owo-colors",
  "supports-color",
@@ -539,6 +551,17 @@ name = "miette-derive"
 version = "4.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b5bc45b761bcf1b5e6e6c4128cd93b84c218721a8d9b894aa0aff4ed180174c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "miette-derive"
+version = "5.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97c2401ab7ac5282ca5c8b518a87635b1a93762b0b90b9990c509888eeccba29"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -782,7 +805,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "knuffel",
- "miette",
+ "miette 5.5.0",
  "rand",
  "regex",
  "reqwest",
