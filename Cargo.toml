@@ -10,7 +10,7 @@ axum = { version = "0.6", features = ["multipart"] }
 tokio = { version = "1.27", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-knuffel = "2.0"
+knuffel = "3.0"
 miette = { version = "4.7", features = ["fancy"] }
 rand = "0.8"
 reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"] }
