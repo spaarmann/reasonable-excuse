@@ -2,7 +2,7 @@ use std::{io::ErrorKind, net::SocketAddr, path::PathBuf, sync::Arc};
 
 use axum::{
     body::Bytes,
-    extract::{ConnectInfo, DefaultBodyLimit, Multipart},
+    extract::{ConnectInfo, DefaultBodyLimit, Multipart, Query},
     http::StatusCode,
     Extension, Router,
 };
@@ -48,14 +48,21 @@ async fn get(ConnectInfo(client_addr): ConnectInfo<SocketAddr>) -> &'static str 
     "POST to this address to upload files"
 }
 
+#[derive(Debug, serde::Deserialize)]
+struct PostParams {
+    keep_name: Option<bool>,
+}
+
 #[tracing::instrument(skip(body, config))]
 async fn post(
     body: Multipart,
+    params: Query<PostParams>,
     ConnectInfo(client_addr): ConnectInfo<SocketAddr>,
     Extension(config): Extension<Arc<Config>>,
 ) -> Result<String, StatusCode> {
     tracing::info!("Upload request");
 
+    let keep_name = params.keep_name.unwrap_or(false);
     let (original_name, bytes) = get_file_name_and_bytes(body).await?;
 
     // We want to preserve the original file extension, while replacing the rest of the file name
@@ -66,9 +73,14 @@ async fn post(
         .1;
 
     loop {
-        let mut name = generate_name(config.filename_length);
-        name.push('.');
-        name.push_str(&extension);
+        let name = if keep_name {
+            original_name.clone()
+        } else {
+            let mut name = generate_name(config.filename_length);
+            name.push('.');
+            name.push_str(&extension);
+            name
+        };
 
         let mut path = config.target_dir.clone();
         path.push(&name);
@@ -80,7 +92,7 @@ async fn post(
             .await
         {
             // happened to get a random path that already exists, try again
-            Err(e) if e.kind() == ErrorKind::AlreadyExists => continue,
+            Err(e) if e.kind() == ErrorKind::AlreadyExists && !keep_name => continue,
             Err(e) => {
                 tracing::error!(path = ?path, error = ?e, "Error opening file for upload");
                 return Err(StatusCode::INTERNAL_SERVER_ERROR);
