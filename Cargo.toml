@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 axum = { version = "0.6", features = ["multipart"] }
-tokio = { version = "1.30", features = ["full"] }
+tokio = { version = "1.32", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 knuffel = "3.2"
