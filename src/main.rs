@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 
 use axum::Router;
 use miette::{IntoDiagnostic, Result, WrapErr};
+use tokio::net::TcpListener;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 mod calendar;
@@ -54,11 +55,18 @@ async fn main() -> Result<()> {
         .wrap_err_with(|| format!("Could not parse server address: {}", config.address))?;
 
     tracing::info!("listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
-        .with_graceful_shutdown(shutdown_signal())
+    let listener = TcpListener::bind(addr)
         .await
         .into_diagnostic()
+        .wrap_err("Could not bind to address!")?;
+
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await
+    .into_diagnostic()
 }
 
 async fn shutdown_signal() {
