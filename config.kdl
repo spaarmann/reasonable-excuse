@@ -1,9 +1,35 @@
 address "0.0.0.0:3000"
+
 upload {
 	route "/upload"
 	target-dir "./test-uploads/"
 	filename-length 4
 }
+
+firefly-shortcuts {
+	route "/firefly-shortcuts/api"
+	firefly-url "https://firefly.s-paarmann.de/"
+	pat-file "./firefly_pat"
+
+	shortcut "Test Shortcut" icon="⚠" {
+		name "Shortcut Test Transaction"
+		source "Lunar"
+		destination "HCØ Canteen"
+		amount 42.0
+		budget "Eating Out / Delivery"
+		category "Lunch"
+	}
+
+	shortcut "HCØ Lunch" icon="🍴" {
+		name "Lunch"
+		source "Lunar"
+		destination "HCØ Canteen"
+		amount 39.0
+		budget "Eating Out / Delivery"
+		category "Lunch"
+	}
+}
+
 calendar {
 	route "/calendar"
 	pass-param "id"

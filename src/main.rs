@@ -6,6 +6,7 @@ use tokio::net::TcpListener;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 mod calendar;
+mod firefly_shortcuts;
 mod upload;
 
 #[derive(knuffel::Decode, Debug)]
@@ -15,6 +16,8 @@ struct Config {
     #[knuffel(child)]
     upload: upload::Config,
     #[knuffel(child)]
+    firefly_shortcuts: firefly_shortcuts::Config,
+    #[knuffel(child)]
     calendar: calendar::Config,
 }
 
@@ -23,9 +26,7 @@ fn read_config() -> Result<Config> {
     let text = std::fs::read_to_string(path)
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to read config file at {}", path))?;
-    let config = knuffel::parse::<Config>(path, &text)
-        .into_diagnostic()
-        .wrap_err("Failed to parse config file")?;
+    let config = knuffel::parse::<Config>(path, &text).wrap_err("Failed to parse config file")?;
     Ok(config)
 }
 
@@ -45,8 +46,10 @@ async fn main() -> Result<()> {
     tracing::info!("Starting with config {:?}", config);
 
     let app = Router::new();
-    let app = upload::setup(config.upload, app).wrap_err("Failed to set up upload module")?;
-    let app = calendar::setup(config.calendar, app).wrap_err("Failed to set up calendar module")?;
+    let app = upload::setup(config.upload, app).context("set up upload module")?;
+    let app = firefly_shortcuts::setup(config.firefly_shortcuts, app)
+        .context("set up firefly_shortcuts module")?;
+    let app = calendar::setup(config.calendar, app).context("set up calendar module")?;
 
     let addr = config
         .address
