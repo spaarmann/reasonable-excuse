@@ -24,7 +24,9 @@ fn read_config() -> Result<Config> {
     let text = std::fs::read_to_string(path)
         .into_diagnostic()
         .wrap_err_with(|| format!("Failed to read config file at {}", path))?;
-    let config = knuffel::parse::<Config>(path, &text).wrap_err("Failed to parse config file")?;
+    let config = knuffel::parse::<Config>(path, &text)
+        .into_diagnostic()
+        .wrap_err("Failed to parse config file")?;
     Ok(config)
 }
 
