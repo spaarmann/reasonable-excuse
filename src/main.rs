@@ -6,7 +6,6 @@ use tokio::net::TcpListener;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 mod calendar;
-mod pcs;
 mod upload;
 
 #[derive(knuffel::Decode, Debug)]
@@ -48,7 +47,6 @@ async fn main() -> Result<()> {
     let app = Router::new();
     let app = upload::setup(config.upload, app).wrap_err("Failed to set up upload module")?;
     let app = calendar::setup(config.calendar, app).wrap_err("Failed to set up calendar module")?;
-    let app = pcs::setup(app).wrap_err("Failed to set up PCS module")?;
 
     let addr = config
         .address
