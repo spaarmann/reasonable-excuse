@@ -1,5 +1,9 @@
 address "0.0.0.0:3000"
 
+// Causes an Allow-Origin CORS header to be set. Can be omitted if no header
+// is needed.
+allow-origin "http://localhost:8000"
+
 upload {
 	route "/upload"
 	target-dir "./test-uploads/"

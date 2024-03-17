@@ -1,8 +1,12 @@
 use std::net::SocketAddr;
 
-use axum::Router;
+use axum::{
+    http::{HeaderValue, Method},
+    Router,
+};
 use miette::{IntoDiagnostic, Result, WrapErr};
 use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 mod calendar;
@@ -13,6 +17,8 @@ mod upload;
 struct Config {
     #[knuffel(child, unwrap(argument))]
     address: String,
+    #[knuffel(child, unwrap(argument))]
+    allow_origin: Option<String>,
     #[knuffel(child)]
     upload: upload::Config,
     #[knuffel(child)]
@@ -49,7 +55,20 @@ async fn main() -> Result<()> {
     let app = upload::setup(config.upload, app).context("set up upload module")?;
     let app = firefly_shortcuts::setup(config.firefly_shortcuts, app)
         .context("set up firefly_shortcuts module")?;
-    let app = calendar::setup(config.calendar, app).context("set up calendar module")?;
+    let mut app = calendar::setup(config.calendar, app).context("set up calendar module")?;
+
+    if let Some(allow_origin) = &config.allow_origin {
+        app = app.layer(
+            CorsLayer::new()
+                .allow_methods([Method::GET, Method::PUT])
+                .allow_origin(
+                    allow_origin
+                        .parse::<HeaderValue>()
+                        .into_diagnostic()
+                        .context("parse allow-origin value")?,
+                ),
+        );
+    }
 
     let addr = config
         .address
