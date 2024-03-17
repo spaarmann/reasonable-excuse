@@ -4,7 +4,7 @@ use axum::{extract::ConnectInfo, http::StatusCode, Extension, Json, Router};
 use miette::{Context, IntoDiagnostic};
 use reqwest::{Client, Method, RequestBuilder, Url};
 
-#[derive(knuffel::Decode, Debug, serde::Serialize)]
+#[derive(Clone, Debug, knuffel::Decode, serde::Serialize)]
 struct Shortcut {
     shortcut_id: u64,
     #[knuffel(argument)]
@@ -77,15 +77,14 @@ pub fn setup(mut config: Config, app: Router) -> miette::Result<Router> {
         .layer(Extension(client)))
 }
 
-#[tracing::instrument]
-async fn get_shortcuts(Extension(config): Extension<Arc<Config>>) -> Result<String, StatusCode> {
+#[tracing::instrument(skip(config))]
+async fn get_shortcuts(
+    ConnectInfo(client_addr): ConnectInfo<SocketAddr>,
+    Extension(config): Extension<Arc<Config>>,
+) -> Result<Json<Vec<Shortcut>>, StatusCode> {
     tracing::info!("get_shortcuts request");
 
-    let json = serde_json::to_string_pretty(&config.shortcuts).map_err(|e| {
-        tracing::error!("Failed to serialize shortcuts: {e}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
-    Ok(json)
+    Ok(Json(config.shortcuts.clone()))
 }
 
 #[derive(Debug, serde::Deserialize)]
